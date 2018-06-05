@@ -49,9 +49,11 @@
 #include "fugue1.h"
 #include "sound.h"
 
+#include "dds.h"
+
 #define ONE 1000000
 
-#define WHICHSONG 3
+#define WHICHSONG 1
 
 XIntc Intc;
 
@@ -65,7 +67,53 @@ const int *Songs[] = { FurElise, Mozart, Minuet, AuldLangSyne, Sirene1, Sirene2,
 
 int *pSong;
 
-void my_timer_interrupt_handler(void * baseaddr_p) {
+void send_to_dac(int x){
+
+	if(x > 127){
+		x = 127;
+	}
+
+	if(x<-128){
+		x = -128;
+	}
+
+	x += 128;
+	XIo_Out32(XPAR_BUZZER_PER_0_BASEADDR + 4*4, x);
+
+}
+
+void buzz_interrupt_handler_1(void * baseaddr_p) {
+	 // 48kHz.
+#if 0
+	// 500Hz square.
+	int cnt_1ms = 0;
+	cnt_1ms++;
+	static int sample = 100;
+	if(cnt_1ms == 48){
+		cnt_1ms = 0;
+
+		if(sample == 100){
+			sample = -100;
+		}else{
+			sample = 100;
+		}
+
+		send_to_dac(sample);
+	}
+#elif 0
+	// Sine.
+	u16 tunning_word = dds_freq_to_tunning_word(1000, 48000);
+	s8 sine = dds_next_sample(tunning_word);
+	send_to_dac(sine);
+#else
+	// MIDI
+
+#endif
+}
+
+
+void buzz_interrupt_handler_0(void * baseaddr_p) {
+
 
 	 //clean reg2(0) to disable timers and set reg2(1) to go into processing state
 	 XIo_Out32(XPAR_BUZZER_PER_0_BASEADDR + 4*2, 0x02);
@@ -89,7 +137,10 @@ void my_timer_interrupt_handler(void * baseaddr_p) {
 	 }
 	 XIo_Out32(XPAR_BUZZER_PER_0_BASEADDR + 4*2, 0x01);
 	  //clean reg2(1) to get out of processing state and set reg2(0) to enable timers
+
+
 }
+
 
 void print(char *str);
 
@@ -112,7 +163,7 @@ int main()
 
 
 	 // Test.
-	 XIo_Out32(XPAR_BUZZER_PER_0_BASEADDR + 4*4, 0x02);
+	 send_to_dac(0);
 
 
 	 //set regs for tc for interrupt(note duration)
@@ -132,17 +183,32 @@ int main()
 	  else
 		  xil_printf("\r\nInterrupt controller initialized");
 
-	  // Connect my_timer_interrupt_handler
-	  Status = XIntc_Connect (&Intc, XPAR_BUZZER_PER_0_BASEADDR,
-			  (XInterruptHandler) my_timer_interrupt_handler,(void *)0);
+	  // Connect buzz_interrupt_handler_0
+	Status = XIntc_Connect(&Intc, XPAR_AXI_INTC_0_BUZZER_PER_0_MY_TIMER_IRQ_INTR,
+			(XInterruptHandler) buzz_interrupt_handler_0, (void *) 0);
 	  if (Status != XST_SUCCESS)
 		  xil_printf ("\r\nRegistering MY_TIMER Interrupt Failed");
 	  else
 		  xil_printf("\r\nMY_TIMER Interrupt registered");
-	   //start the interrupt controller in real mode
+		Status = XIntc_Connect(&Intc, XPAR_AXI_INTC_0_BUZZER_PER_0_O_INTERRUPT48KHZ_INTR,
+				(XInterruptHandler) buzz_interrupt_handler_1, (void *) 0);
+		  if (Status != XST_SUCCESS)
+			  xil_printf ("\r\nRegistering MY_TIMER Interrupt Failed");
+		  else
+			  xil_printf("\r\nMY_TIMER Interrupt registered");
+
+
+	  //start the interrupt controller in real mode
 	   Status = XIntc_Start(&Intc, XIN_REAL_MODE);
+		  if (Status != XST_SUCCESS)
+			  xil_printf ("\r\nXIntc_Start Failed");
+		  else
+			  xil_printf("\r\XIntc_Start success");
+
 	   //enable interrupt controller
-	   XIntc_Enable (&Intc, XPAR_BUZZER_PER_0_BASEADDR);
+	   XIntc_Enable (&Intc, XPAR_AXI_INTC_0_BUZZER_PER_0_MY_TIMER_IRQ_INTR);
+	   XIntc_Enable (&Intc, XPAR_AXI_INTC_0_BUZZER_PER_0_O_INTERRUPT48KHZ_INTR);
+
 	   microblaze_enable_interrupts();
 
 	   while (1){
