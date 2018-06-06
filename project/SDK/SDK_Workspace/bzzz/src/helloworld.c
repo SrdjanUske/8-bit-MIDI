@@ -47,13 +47,17 @@
 #include "whistle.h"
 #include "invent8.h"
 #include "fugue1.h"
+#include "zutakuca.h"
 #include "sound.h"
 
 #include "dds.h"
 
 #define ONE 1000000
+#define SAMPLING_RATE 48000
 
 #define WHICHSONG 1
+
+
 
 XIntc Intc;
 
@@ -82,11 +86,14 @@ void send_to_dac(int x){
 
 }
 
+
+
+
 void buzz_interrupt_handler_1(void * baseaddr_p) {
-	 // 48kHz.
+
 #if 0
-	// 500Hz square.
-	int cnt_1ms = 0;
+	// 500Hz square
+	static int cnt_1ms = 0;
 	cnt_1ms++;
 	static int sample = 100;
 	if(cnt_1ms == 48){
@@ -101,12 +108,38 @@ void buzz_interrupt_handler_1(void * baseaddr_p) {
 		send_to_dac(sample);
 	}
 #elif 0
-	// Sine.
+	// Sine wave
 	u16 tunning_word = dds_freq_to_tunning_word(1000, 48000);
 	s8 sine = dds_next_sample(tunning_word);
 	send_to_dac(sine);
 #else
 	// MIDI
+	static int current_note = 1;
+	static int cnt = SAMPLING_RATE;
+	static u16 tunning_word = 0;
+	static u8 flag = 1;
+
+	++cnt;
+
+	if ( flag == 1){
+		tunning_word = dds_freq_to_tunning_word(zutakuca[current_note+1], SAMPLING_RATE);
+		flag = 0;
+	}
+
+	if (cnt >= SAMPLING_RATE/zutakuca[current_note]){
+		cnt = 0;
+
+		current_note += 2;
+		if(zutakuca[current_note] == 0){
+			current_note = 1;
+			flag = 1;
+		}
+
+		tunning_word = dds_freq_to_tunning_word(zutakuca[current_note+1], SAMPLING_RATE);
+	}
+
+	u8 sample = dds_next_sample(tunning_word);
+	send_to_dac(sample);
 
 #endif
 }
