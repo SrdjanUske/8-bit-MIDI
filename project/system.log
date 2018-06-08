@@ -13043,3 +13043,8 @@ microblaze_0  -o b implementation/download.bit
 Memory Initialization completed successfully.
 
 Done!
+Writing filter settings....
+Done writing filter settings to:
+	D:\8-bit-MIDI\project\etc\system.filters
+Done writing Tab View settings to:
+	D:\8-bit-MIDI\project\etc\system.gui
