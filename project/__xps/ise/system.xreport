@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <report-views version="2.0" >
  <header>
-  <DateModified>2018-06-08T12:03:55</DateModified>
+  <DateModified>2018-06-08T14:50:46</DateModified>
   <ModuleName>system</ModuleName>
-  <SummaryTimeStamp>2018-06-08T12:03:53</SummaryTimeStamp>
-  <SavedFilePath>D:/RA60-2015/8-bit-MIDI/project/__xps/ise/system.xreport</SavedFilePath>
+  <SummaryTimeStamp>2018-06-08T14:50:46</SummaryTimeStamp>
+  <SavedFilePath>D:/8-bit-MIDI/project/__xps/ise/system.xreport</SavedFilePath>
   <FilterFile>filter.filter</FilterFile>
-  <SavedFilterFilePath>D:/RA60-2015/8-bit-MIDI/project/__xps/ise</SavedFilterFilePath>
+  <SavedFilterFilePath>D:/8-bit-MIDI/project/__xps/ise</SavedFilterFilePath>
   <DateInitialized>2018-05-08T10:56:54</DateInitialized>
   <EnableMessageFiltering>false</EnableMessageFiltering>
  </header>
